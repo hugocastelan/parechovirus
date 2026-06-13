@@ -3,9 +3,9 @@
 from Bio import SeqIO
 
 # Archivos
-fasta_in = "/Users/hugo/Desktop/vp1_parachovirus/vp1_all_complete_renamed_v2.fasta"
+fasta_in = "/Users/hugo/Desktop/vp1_parachovirus/vp1_headers_updated.fasta"
 headers_remove = "/Users/hugo/Desktop/vp1_parachovirus/id_remove.txt"
-fasta_out = "/Users/hugo/Desktop/vp1_parachovirus/vp1_all_complete_renamed_filter_v2.fasta"
+fasta_out = "/Users/hugo/Desktop/vp1_parachovirus/vp1_headers_updated_remove_v2.fasta"
 
 # Leer headers a eliminar
 with open(headers_remove) as f:
