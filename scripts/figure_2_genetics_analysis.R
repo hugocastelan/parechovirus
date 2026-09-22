@@ -14,7 +14,7 @@ library(ggdendro)
 
 # 2. Settings
 
-alignment_file <- "/Users/hugo/Desktop/vp1_parachovirus/vp1_headers_updated.fasta"
+alignment_file <- "/Users/hugo/Desktop/vp1_parachovirus/manual_v3_coverage50_ambiguity10_noduplicates_relabel_v5.fasta"
 
 colors <- c(
   "HPeV1"  = "#4E79A7", "HPeV2"  = "#F28E2B", "HPeV3"  = "#59A14F",
@@ -200,3 +200,13 @@ master_figure <- pcoa_plot + dendrogram_plot + lollipop_plots +
   ))
 
 master_figure
+
+
+ggsave(
+  filename = "HPeV_VP1_diversity_analysis.pdf",
+  plot = master_figure,
+  width = 14,
+  height = 9,
+  units = "in",
+  device = cairo_pdf
+)
