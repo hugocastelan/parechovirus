@@ -17,17 +17,15 @@ library(ggdendro)
 alignment_file <- "/Users/hugo/Desktop/vp1_parachovirus/manual_v3_coverage50_ambiguity10_noduplicates_relabel_v5.fasta"
 
 colors <- c(
-  "HPeV1"  = "#4E79A7", "HPeV2"  = "#F28E2B", "HPeV3"  = "#59A14F",
-  "HPeV4"  = "#E15759", "HPeV5"  = "#76B7B2", "HPeV6"  = "#EDC948",
-  "HPeV7"  = "#B07AA1", "HPeV8"  = "#FF9DA7", "HPeV9"  = "#9C755F",
-  "HPeV10" = "#BAB0AC", "HPeV11" = "#8CD17D", "HPeV12" = "#499894",
-  "HPeV13" = "#D37295", "HPeV14" = "#86BCB6", "HPeV15" = "#A0CBE8",
-  "HPeV16" = "#FFBE7D", "HPeV17" = "#8A89A6"
+  "PeV-A1"  = "#4E79A7", "PeV-A2"  = "#F28E2B", "PeV-A3"  = "#59A14F",
+  "PeV-A4"  = "#E15759", "PeV-A5"  = "#76B7B2", "PeV-A6"  = "#EDC948",
+  "PeV-A7"  = "#B07AA1", "PeV-A8"  = "#FF9DA7", "PeV-A9"  = "#9C755F",
+  "PeV-A10" = "#BAB0AC", "PeV-A11" = "#8CD17D", "PeV-A12" = "#499894",
+  "PeV-A13" = "#D37295", "PeV-A14" = "#86BCB6", "PeV-A15" = "#A0CBE8",
+  "PeV-A16" = "#FFBE7D", "PeV-A17" = "#8A89A6"
 )
-
-ordered_genotypes <- paste0("HPeV", 1:17)
-
-
+# Genotype names present in the FASTA
+original_genotypes <- paste0("HPeV", 1:17)
 # 3. DATA READING AND FILTERING
 
 alignment <- read.dna(alignment_file, format = "fasta")
