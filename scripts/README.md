@@ -9,3 +9,5 @@ This directory contains the scripts used for sequence processing, metadata prepa
 `figure_2_genetics_analysis.R` The script analyzes the genetic diversity of HPeV using VP1 sequences. It compares how different the genotypes are using genetic distances, PCoA, and PERMANOVA; shows which genotypes are most similar using a dendrogram; and calculates the diversity within each genotype using haplotypes, nucleotide diversity (π), and Tajima’s D.
 
 `subsampling_genotype_3.R` downsamples a FASTA file of HPeV3 sequences by selecting a maximum of 10 sequences per geographic region and year combination.
+
+`subsampling_genotype_3.R` This script generates a global distribution map and a temporal bubble plot for HPeV genotypes using metadata. It includes data cleaning, visualization functions, and exports the final figure as a PDF.
