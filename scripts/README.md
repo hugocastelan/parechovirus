@@ -10,4 +10,4 @@ This directory contains the scripts used for sequence processing, metadata prepa
 
 `subsampling_genotype_3.R` downsamples a FASTA file of HPeV3 sequences by selecting a maximum of 10 sequences per geographic region and year combination.
 
-`subsampling_genotype_3.R` This script generates a global distribution map and a temporal bubble plot for HPeV genotypes using metadata. It includes data cleaning, visualization functions, and exports the final figure as a PDF.
+`Figure_1_map_and_bubble_plot.R` This script generates a global distribution map and a temporal bubble plot for HPeV genotypes using metadata. It includes data cleaning, visualization functions, and exports the final figure as a PDF.
