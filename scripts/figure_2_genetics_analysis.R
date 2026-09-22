@@ -48,6 +48,33 @@ metadata <- droplevels(metadata)
 present_genotypes <- levels(metadata$Genotype)
 
 
+# Filter using the ORIGINAL genotype names present in the FASTA
+metadata <- metadata %>%
+  filter(!is.na(Genotype_original),
+         Genotype_original != "NA",
+         Genotype_original != "",
+         Genotype_original != "Unknown",
+         Genotype_original %in% original_genotypes)
+
+# Change HPeV1 -> PeV-A1, HPeV2 -> PeV-A2, etc.
+metadata <- metadata %>%
+  mutate(
+    Genotype = sub("^HPeV", "PeV-A", Genotype_original)
+  )
+
+alignment <- alignment[metadata$name, ]
+
+metadata$Genotype <- factor(
+  metadata$Genotype,
+  levels = ordered_genotypes
+)
+
+metadata <- droplevels(metadata)
+
+present_genotypes <- levels(metadata$Genotype)
+
+
+
 # 4. PANEL A: PCoA + ADONIS
 
 distance_matrix <- as.matrix(dist.dna(alignment, model = "raw", pairwise.deletion = TRUE))
