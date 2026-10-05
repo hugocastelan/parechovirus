@@ -1,9 +1,4 @@
-# ============================================================
 # PeV-A VP1 PHYLOGENY - FIGURE 2
-# Panel A: midpoint-rooted complete tree, tips colored by genotype
-# Panel B: same tree, only SRA tips colored, no labels, bars for
-#          genotypes with >= 4 SRA sequences
-# ============================================================
 
 library(ape)
 library(phytools)
@@ -13,33 +8,32 @@ library(dplyr)
 library(patchwork)
 library(grid)
 
-# ---------- Input files ----------
+# Input files
 tree_file <- paste0(
   "/Users/hugo/Desktop/vp1_parachovirus/",
   "manual_v3_coverage50_ambiguity10_noduplicates_relabel_v5.tree"
 )
-metadata_file <- paste0(
-  "/Users/hugo/Desktop/vp1_parachovirus/",
+metadata_file <- paste0("/Users/hugo/Desktop/vp1_parachovirus/",
   "manual_v3_coverage50_ambiguity10_noduplicates_relabel_v5_metadata.csv"
 )
 
-# ---------- Read data ----------
+# Read data 
 tree <- read.tree(tree_file)
 meta <- read.csv(metadata_file, stringsAsFactors = FALSE)
 
 cat("Tree tips:", length(tree$tip.label), "\n")
 cat("Metadata rows:", nrow(meta), "\n")
 
-# ---------- Midpoint root ----------
+# Midpoint root
 tree <- midpoint.root(tree)
 
-# ---------- Build tree label ----------
+# Build tree label
 meta$tree_label <- paste(
   meta$accession, meta$virus, meta$genotype,
   meta$country, meta$year, sep = "|"
 )
 
-# ---------- Check match ----------
+# Check match 
 matched <- sum(meta$tree_label %in% tree$tip.label)
 cat("Metadata matching tree:", matched, "/", nrow(meta), "\n")
 
@@ -55,16 +49,16 @@ if (length(unmatched_tree) > 0) {
   print(unmatched_tree)
 }
 
-# ---------- Genotype names ----------
+# Genotype names 
 meta$genotype_plot <- sub("^HPeV", "PeV-A", meta$genotype)
 genotype_order <- paste0("PeV-A", 1:17)
 meta$genotype_plot <- factor(meta$genotype_plot, levels = genotype_order)
 
-# ---------- Identify SRA sequences ----------
+# Identify SRA sequences 
 meta$is_sra <- grepl("^(SRR|ERR|DRR)", meta$accession)
 cat("Total SRA:", sum(meta$is_sra), "\n")
 
-# ---------- Genotype colors ----------
+# Genotype colors
 genotype_colors <- c(
   "PeV-A1"  = "#4C78A8", "PeV-A2"  = "#F58518",
   "PeV-A3"  = "#2CA02C", "PeV-A4"  = "#E45756",
@@ -77,7 +71,7 @@ genotype_colors <- c(
   "PeV-A17" = "#6B6ECF"
 )
 
-# ---------- Counts for Panel A ----------
+# Counts for Panel A
 counts_all <- meta %>%
   filter(!is.na(genotype_plot)) %>%
   count(genotype_plot, .drop = FALSE)
@@ -87,7 +81,7 @@ legend_labels_A <- setNames(
   as.character(counts_all$genotype_plot)
 )
 
-# ---------- Panel A tree ----------
+# Panel A tree 
 p_base_A <- ggtree(tree)
 
 tree_data_A <- p_base_A$data %>%
@@ -118,7 +112,7 @@ pA <- p_base_A +
   ) +
   guides(color = guide_legend(override.aes = list(size = 3)))
 
-# ---------- SRA data ----------
+# SRA data 
 sra <- meta %>% filter(is_sra)
 
 sra_counts <- sra %>%
@@ -135,7 +129,7 @@ legend_labels_B <- setNames(
   as.character(sra_counts$genotype_plot)
 )
 
-# ---------- Panel B tree ----------
+# Panel B tree 
 p_base_B <- ggtree(tree)
 tree_data_B <- p_base_B$data %>%
   left_join(meta, by = c("label" = "tree_label"))
@@ -146,7 +140,7 @@ sra_tip_data <- tree_data_B %>%
 
 cat("SRA tips plotted:", nrow(sra_tip_data), "\n")
 
-# ---------- Bars for genotypes with >= 4 SRA ----------
+# Bars for genotypes with >= 4 SRA 
 minimum_sra_for_bar <- 4
 bar_genotypes <- sra_counts %>%
   filter(n >= minimum_sra_for_bar) %>%
@@ -182,7 +176,7 @@ if (nrow(bar_positions) > 0) {
   plot_xmax <- xmax_tree + tree_width * 0.05
 }
 
-# ---------- Panel B ----------
+# Panel B 
 pB <- p_base_B +
   geom_point(
     data = sra_tip_data,
@@ -222,17 +216,15 @@ pB <- p_base_B +
     override.aes = list(size = 4)
   ))
 
-# ---------- Combine ----------
+# Combine
 fig <- pA + pB +
   plot_layout(widths = c(1, 1.12)) +
   plot_annotation(tag_levels = "A")
 
-# ---------- Save PDF ----------
+# Save PDF 
 output_pdf <- paste0(
   "/Users/hugo/Desktop/vp1_parachovirus/",
-  "Figure_PeV-A_VP1_midpoint_SRA.pdf"
-)
+  "Figure_PeV-A_VP1_midpoint_SRA.pdf")
 
 ggsave(filename = output_pdf, plot = fig, width = 15, height = 8, units = "in")
 
-cat("\nPDF saved to:\n", output_pdf, "\n")
