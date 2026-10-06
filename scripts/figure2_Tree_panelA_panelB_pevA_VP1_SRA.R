@@ -8,72 +8,88 @@ library(dplyr)
 library(patchwork)
 library(grid)
 
-# Input files
+# Input files 
 tree_file <- paste0(
   "/Users/hugo/Desktop/vp1_parachovirus/",
-  "manual_v3_coverage50_ambiguity10_noduplicates_relabel_v5.tree"
+  "manual_v3_coverage50_ambiguity10_noduplicates_relabel_v5.1.tree"
 )
-metadata_file <- paste0("/Users/hugo/Desktop/vp1_parachovirus/",
-  "manual_v3_coverage50_ambiguity10_noduplicates_relabel_v5_metadata.csv"
+metadata_file <- paste0(
+  "/Users/hugo/Desktop/vp1_parachovirus/",
+  "manual_v3_coverage50_ambiguity10_noduplicates_relabel_v5_metadata_A18_A19.csv"
 )
 
-# Read data 
+# Read data
 tree <- read.tree(tree_file)
-meta <- read.csv(metadata_file, stringsAsFactors = FALSE)
+meta <- read.csv(metadata_file, stringsAsFactors = FALSE, check.names = FALSE)
 
-cat("Tree tips:", length(tree$tip.label), "\n")
+cat("Tree tips:", Ntip(tree), "\n")
+cat("Internal nodes:", tree$Nnode, "\n")
 cat("Metadata rows:", nrow(meta), "\n")
+cat("Node support labels:", length(tree$node.label), "\n")
 
-# Midpoint root
+# Midpoint root 
 tree <- midpoint.root(tree)
 
-# Build tree label
-meta$tree_label <- paste(
-  meta$accession, meta$virus, meta$genotype,
-  meta$country, meta$year, sep = "|"
-)
+# Prepare metadata
+meta$accession_clean <- sub("\\.[0-9]+$", "", trimws(meta$accession))
+meta$genotype_plot <- trimws(meta$genotype)
+meta$genotype_plot <- gsub("^HPeV[-_ ]?([0-9]+)$", "PeV-A\\1", meta$genotype_plot)
+meta$genotype_plot <- gsub("^PeV-A[-_ ]?([0-9]+)$", "PeV-A\\1", meta$genotype_plot)
 
-# Check match 
-matched <- sum(meta$tree_label %in% tree$tip.label)
-cat("Metadata matching tree:", matched, "/", nrow(meta), "\n")
-
-unmatched_meta <- meta$tree_label[!meta$tree_label %in% tree$tip.label]
-if (length(unmatched_meta) > 0) {
-  cat("WARNING: metadata labels not found in tree:\n")
-  print(unmatched_meta)
-}
-
-unmatched_tree <- tree$tip.label[!tree$tip.label %in% meta$tree_label]
-if (length(unmatched_tree) > 0) {
-  cat("WARNING: tree tips without metadata:\n")
-  print(unmatched_tree)
-}
-
-# Genotype names 
-meta$genotype_plot <- sub("^HPeV", "PeV-A", meta$genotype)
-genotype_order <- paste0("PeV-A", 1:17)
+genotype_order <- paste0("PeV-A", 1:19)
 meta$genotype_plot <- factor(meta$genotype_plot, levels = genotype_order)
 
-# Identify SRA sequences 
-meta$is_sra <- grepl("^(SRR|ERR|DRR)", meta$accession)
-cat("Total SRA:", sum(meta$is_sra), "\n")
+# Identify SRA 
+meta$is_sra <- grepl("^(SRR|ERR|DRR)", meta$accession_clean)
+cat("Total SRA sequences:", sum(meta$is_sra), "\n")
 
-# Genotype colors
+# Genotype colors 
 genotype_colors <- c(
-  "PeV-A1"  = "#4C78A8", "PeV-A2"  = "#F58518",
-  "PeV-A3"  = "#2CA02C", "PeV-A4"  = "#E45756",
-  "PeV-A5"  = "#72B7B2", "PeV-A6"  = "#ECA400",
-  "PeV-A7"  = "#B279A2", "PeV-A8"  = "#FF9DA6",
-  "PeV-A9"  = "#9C755F", "PeV-A10" = "#8C564B",
-  "PeV-A11" = "#59A14F", "PeV-A12" = "#76B7B2",
-  "PeV-A13" = "#EDC948", "PeV-A14" = "#4E9F95",
-  "PeV-A15" = "#E15759", "PeV-A16" = "#F28E2B",
-  "PeV-A17" = "#6B6ECF"
+  "PeV-A1"="#4C78A8","PeV-A2"="#F58518","PeV-A3"="#2CA02C","PeV-A4"="#E45756",
+  "PeV-A5"="#72B7B2","PeV-A6"="#ECA400","PeV-A7"="#B279A2","PeV-A8"="#FF9DA6",
+  "PeV-A9"="#9C755F","PeV-A10"="#8C564B","PeV-A11"="#59A14F","PeV-A12"="#76B7B2",
+  "PeV-A13"="#EDC948","PeV-A14"="#4E9F95","PeV-A15"="#E15759","PeV-A16"="#F28E2B",
+  "PeV-A17"="#6B6ECF","PeV-A18"="#B07AA1","PeV-A19"="#17BECF"
 )
 
-# Counts for Panel A
-counts_all <- meta %>%
-  filter(!is.na(genotype_plot)) %>%
+#Tree data 
+p_base <- ggtree(tree, color = "grey65", linewidth = 0.28)
+tree_data <- p_base$data
+
+tree_data$accession_clean <- NA_character_
+tree_data$accession_clean[tree_data$isTip] <- sub(
+  "\\|.*$", "", tree_data$label[tree_data$isTip]
+)
+tree_data$accession_clean[tree_data$isTip] <- sub(
+  "\\.[0-9]+$", "", tree_data$accession_clean[tree_data$isTip]
+)
+
+tree_data <- tree_data %>% left_join(meta, by = "accession_clean")
+
+cat("Tips with metadata:",
+    sum(tree_data$isTip & !is.na(tree_data$genotype_plot)), "\n")
+cat("Tips without metadata:",
+    sum(tree_data$isTip & is.na(tree_data$genotype_plot)), "\n")
+
+# Node support
+tree_data$support <- NA_real_
+tree_data$support[!tree_data$isTip] <- suppressWarnings(
+  as.numeric(tree_data$label[!tree_data$isTip])
+)
+tree_data$support_percent <- NA_real_
+tree_data$support_percent[!tree_data$isTip] <- round(
+  tree_data$support[!tree_data$isTip] * 100
+)
+
+support_threshold <- 95
+support_data <- tree_data %>%
+  filter(!isTip, !is.na(support_percent), support_percent >= support_threshold)
+
+cat("Nodes with support >=", support_threshold, ":", nrow(support_data), "\n")
+
+# Counts for Panel A 
+counts_all <- tree_data %>%
+  filter(isTip, !is.na(genotype_plot)) %>%
   count(genotype_plot, .drop = FALSE)
 
 legend_labels_A <- setNames(
@@ -81,18 +97,21 @@ legend_labels_A <- setNames(
   as.character(counts_all$genotype_plot)
 )
 
-# Panel A tree 
-p_base_A <- ggtree(tree)
+#  Panel A 
+pA <- ggtree(tree, color = "grey65", linewidth = 0.28)
+pA$data <- tree_data
 
-tree_data_A <- p_base_A$data %>%
-  left_join(meta, by = c("label" = "tree_label"))
-p_base_A$data <- tree_data_A
-
-pA <- p_base_A +
+pA <- pA +
   geom_point(
-    data = tree_data_A %>% filter(isTip, !is.na(genotype_plot)),
+    data = tree_data %>% filter(isTip, !is.na(genotype_plot)),
     aes(x = x, y = y, color = genotype_plot),
-    inherit.aes = FALSE, size = 0.75, alpha = 0.95
+    inherit.aes = FALSE, size = 0.85, alpha = 0.95
+  ) +
+  geom_text(
+    data = support_data,
+    aes(x = x, y = y, label = support_percent),
+    inherit.aes = FALSE, color = "black", size = 1.65,
+    fontface = "plain", hjust = -0.20, vjust = -0.15, check_overlap = TRUE
   ) +
   scale_color_manual(
     values = genotype_colors,
@@ -108,17 +127,15 @@ pA <- p_base_A +
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 7),
     legend.key.height = unit(0.30, "cm"),
-    plot.margin = margin(5, 10, 5, 5)
+    plot.margin = margin(5, 15, 5, 5)
   ) +
-  guides(color = guide_legend(override.aes = list(size = 3)))
+  guides(color = guide_legend(override.aes = list(size = 3, alpha = 1)))
 
-# SRA data 
-sra <- meta %>% filter(is_sra)
+#SRA data for Panel B
+sra_tip_data <- tree_data %>%
+  filter(isTip, !is.na(is_sra), is_sra, !is.na(genotype_plot))
 
-sra_counts <- sra %>%
-  filter(!is.na(genotype_plot)) %>%
-  count(genotype_plot, .drop = FALSE) %>%
-  filter(n > 0)
+sra_counts <- sra_tip_data %>% count(genotype_plot, .drop = FALSE) %>% filter(n > 0)
 
 sra_genotypes <- genotype_order[
   genotype_order %in% as.character(sra_counts$genotype_plot)
@@ -129,23 +146,11 @@ legend_labels_B <- setNames(
   as.character(sra_counts$genotype_plot)
 )
 
-# Panel B tree 
-p_base_B <- ggtree(tree)
-tree_data_B <- p_base_B$data %>%
-  left_join(meta, by = c("label" = "tree_label"))
-p_base_B$data <- tree_data_B
-
-sra_tip_data <- tree_data_B %>%
-  filter(isTip, !is.na(is_sra), is_sra, !is.na(genotype_plot))
-
-cat("SRA tips plotted:", nrow(sra_tip_data), "\n")
-
-# Bars for genotypes with >= 4 SRA 
+# ---------- Bars for Panel B ----------
 minimum_sra_for_bar <- 4
 bar_genotypes <- sra_counts %>%
   filter(n >= minimum_sra_for_bar) %>%
-  pull(genotype_plot) %>%
-  as.character()
+  pull(genotype_plot) %>% as.character()
 
 bar_positions <- sra_tip_data %>%
   filter(as.character(genotype_plot) %in% bar_genotypes) %>%
@@ -156,8 +161,8 @@ bar_positions <- sra_tip_data %>%
     n = n(), .groups = "drop"
   )
 
-xmin_tree <- min(tree_data_B$x, na.rm = TRUE)
-xmax_tree <- max(tree_data_B$x, na.rm = TRUE)
+xmin_tree <- min(tree_data$x, na.rm = TRUE)
+xmax_tree <- max(tree_data$x, na.rm = TRUE)
 tree_width <- xmax_tree - xmin_tree
 
 if (nrow(bar_positions) > 0) {
@@ -176,8 +181,11 @@ if (nrow(bar_positions) > 0) {
   plot_xmax <- xmax_tree + tree_width * 0.05
 }
 
-# Panel B 
-pB <- p_base_B +
+#Panel B 
+pB <- ggtree(tree, color = "grey65", linewidth = 0.28)
+pB$data <- tree_data
+
+pB <- pB +
   geom_point(
     data = sra_tip_data,
     aes(x = x, y = y, color = genotype_plot),
@@ -211,20 +219,21 @@ pB <- p_base_B +
     legend.key.height = unit(0.35, "cm"),
     plot.margin = margin(5, 25, 5, 5)
   ) +
-  guides(color = guide_legend(
-    nrow = 3, byrow = TRUE,
-    override.aes = list(size = 4)
-  ))
+  guides(color = guide_legend(nrow = 3, byrow = TRUE, override.aes = list(size = 4)))
 
-# Combine
+# Combine 
 fig <- pA + pB +
   plot_layout(widths = c(1, 1.12)) +
   plot_annotation(tag_levels = "A")
 
-# Save PDF 
+#Save 
 output_pdf <- paste0(
   "/Users/hugo/Desktop/vp1_parachovirus/",
-  "Figure_PeV-A_VP1_midpoint_SRA.pdf")
+  "Figure_PeV-A_VP1_FastTree_support.pdf"
+)
 
-ggsave(filename = output_pdf, plot = fig, width = 15, height = 8, units = "in")
+ggsave(
+  filename = output_pdf, plot = fig,
+  width = 15, height = 8, units = "in", device = cairo_pdf
+)
 
