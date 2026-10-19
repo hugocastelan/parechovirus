@@ -4,7 +4,6 @@ import subprocess
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-
 ###Files 
 FRAGMENTS = "/Users/hugo/Desktop/all_genes_diferenf_size.fasta"
 ALIGNMENT_DIR = "/Users/hugo/Desktop/Parechovirus_Proteins"
@@ -24,7 +23,6 @@ GENES = [
 MIN_PID = 70
 MIN_COV = 50
 MIN_LEN = 90
-
 # OUTPUT DIRS
 REFDIR = os.path.join(OUTDIR, "references")
 BLASTDIR = os.path.join(OUTDIR, "blast")
@@ -32,14 +30,12 @@ GENEDIR = os.path.join(OUTDIR, "genes")
 FINALDIR = os.path.join(OUTDIR, "aligned")
 for d in [OUTDIR, REFDIR, BLASTDIR, GENEDIR, FINALDIR]:
     os.makedirs(d, exist_ok=True)
-
 # Load sequences 
 print("\nLoading sequences")
 allseqs = SeqIO.to_dict(
     SeqIO.parse(FRAGMENTS, "fasta")
 )
 print("Total sequences:", len(allseqs))
-
 # Reconstruct or build a reference 
 print("\nCreating references")
 valid_genes = []
@@ -75,7 +71,6 @@ for gene in GENES:
         "fasta"
     )
     valid_genes.append(gene)
-
 # BUILD BLAST DB
 print("\nBuilding BLAST database")
 db_path = os.path.join(
@@ -196,7 +191,6 @@ for gene in valid_genes:
         f"{gene}: "
         f"{len(recovered)} sequences recovered"
     )
-
 # run MAFFT
 print("\nRunning MAFFT")
 for gene in valid_genes:
