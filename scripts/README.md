@@ -4,6 +4,9 @@ This directory contains the scripts used for sequence processing, metadata prepa
 
 ### Description of scripts 
 
+
+`cds_from_gbk_parachovirus.py` The script recovers parechovirus gene fragments from a FASTA file using BLAST (filters: identity ≥70%, coverage ≥50%, length ≥90 nt), trims them to the reading frame and rebuilds headers with metadata; then it aligns each gene against its reference with MAFFT and saves the final alignments.
+
 `relabel_tips.py` assigns genotypes based on phylogenetic proximity. For each sequence with an unknown genotype, the script identifies the *k* nearest sequences with known genotypes within a defined distance cutoff and assigns the genotype supported by the majority of these neighbors.
 
 `Figure_1_map_and_bubble_plot.R` This script generates a global distribution map and a temporal bubble plot for HPeV genotypes using metadata. It includes data cleaning, visualization functions, and exports the final figure as a PDF.
